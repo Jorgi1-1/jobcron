@@ -1,8 +1,6 @@
 name: JobCron digest
 
 on:
-  push:
-    branches: [master]
   schedule:
     # 09:00 y 19:00 hora CDMX (UTC-6) ~= 15:00 y 01:00 UTC
     - cron: "0 15 * * *"
@@ -18,7 +16,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - run: npm ci
