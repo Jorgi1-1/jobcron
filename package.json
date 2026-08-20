@@ -1,0 +1,27 @@
+{
+  "name": "jobcron",
+  "version": "1.0.0",
+  "description": "Bot personal de monitoreo de vacantes (Greenhouse/Lever/Ashby/scraper) con digest diario por correo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "cheerio": "^1.0.0",
+    "nodemailer": "^9.0.5",
+    "resend": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "@types/nodemailer": "^6.4.16",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
