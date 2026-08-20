@@ -3,14 +3,14 @@ import { Resend } from "resend";
 import type { FilteredJob } from "./filter.js";
 
 /**
- * FR-5 — envía el digest solo si hay vacantes nuevas. Soporta dos
- * proveedores (decisión abierta #3 del PRD), elegido vía EMAIL_PROVIDER.
+ * FR-5 (modificado) — el digest se envía siempre, incluso sin vacantes
+ * nuevas, para confirmar que el bot corrió. Soporta dos proveedores
+ * (decisión abierta #3 del PRD), elegido vía EMAIL_PROVIDER.
  */
 export async function sendDigest(jobs: FilteredJob[]): Promise<void> {
-  if (jobs.length === 0) return;
-
   const to = requireEnv("DIGEST_TO_EMAIL");
-  const subject = `JobCron — ${jobs.length} vacante(s) nueva(s)`;
+  const subject =
+    jobs.length === 0 ? "JobCron — sin vacantes nuevas hoy" : `JobCron — ${jobs.length} vacante(s) nueva(s)`;
   const html = renderHtml(jobs);
   const text = renderText(jobs);
 
@@ -60,6 +60,16 @@ const BORDER_COLOR = "#e5e7eb";
 const BG_COLOR = "#f4f4f7";
 const CARD_BG = "#ffffff";
 
+function groupByCompany(jobs: FilteredJob[]): Map<string, FilteredJob[]> {
+  const groups = new Map<string, FilteredJob[]>();
+  for (const job of jobs) {
+    const existing = groups.get(job.company);
+    if (existing) existing.push(job);
+    else groups.set(job.company, [job]);
+  }
+  return groups;
+}
+
 export function renderHtml(jobs: FilteredJob[]): string {
   const today = new Date().toLocaleDateString("es-MX", {
     weekday: "long",
@@ -67,37 +77,46 @@ export function renderHtml(jobs: FilteredJob[]): string {
     month: "long",
   });
 
-  const cards = jobs
-    .map(
-      (job) => `
-      <tr>
-        <td style="padding:0 0 12px 0;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${CARD_BG};border:1px solid ${BORDER_COLOR};border-radius:10px;">
-            <tr>
-              <td style="padding:16px 20px;">
-                <span style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:${BRAND_COLOR};background:#eef2ff;border-radius:999px;padding:3px 10px;">
-                  ${escapeHtml(job.company)}
-                </span>
-                <div style="margin-top:10px;">
-                  <a href="${escapeHtml(job.url)}" style="font-size:17px;line-height:1.35;font-weight:600;color:${TEXT_COLOR};text-decoration:none;">
+  const body =
+    jobs.length === 0
+      ? `
+        <tr>
+          <td style="padding:24px 20px;text-align:center;background:${CARD_BG};border:1px solid ${BORDER_COLOR};border-radius:10px;">
+            <div style="font-size:14px;color:${MUTED_COLOR};">
+              No se encontraron vacantes nuevas en esta corrida. El bot sigue corriendo normal — te aviso en cuanto aparezca algo.
+            </div>
+          </td>
+        </tr>`
+      : Array.from(groupByCompany(jobs), ([company, companyJobs]) => `
+        <tr>
+          <td style="padding:18px 0 6px 0;">
+            <span style="font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:${BRAND_COLOR};">
+              ${escapeHtml(company)}
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:${CARD_BG};border:1px solid ${BORDER_COLOR};border-radius:10px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              ${companyJobs
+                .map(
+                  (job, i) => `
+              <tr>
+                <td style="padding:10px 16px;${i < companyJobs.length - 1 ? `border-bottom:1px solid ${BORDER_COLOR};` : ""}">
+                  <a href="${escapeHtml(job.url)}" style="font-size:14px;line-height:1.35;font-weight:600;color:${TEXT_COLOR};text-decoration:none;">
                     ${escapeHtml(job.title)}
                   </a>
-                </div>
-                <div style="margin-top:6px;font-size:14px;color:${MUTED_COLOR};">
-                  📍 ${escapeHtml(job.location || "Ubicación no especificada")}
-                </div>
-                <div style="margin-top:14px;">
-                  <a href="${escapeHtml(job.url)}" style="display:inline-block;font-size:13px;font-weight:600;color:${BRAND_COLOR};text-decoration:none;">
-                    Ver vacante →
-                  </a>
-                </div>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>`
-    )
-    .join("");
+                  <div style="margin-top:2px;font-size:12px;color:${MUTED_COLOR};">
+                    📍 ${escapeHtml(job.location || "Ubicación no especificada")}
+                  </div>
+                </td>
+              </tr>`
+                )
+                .join("")}
+            </table>
+          </td>
+        </tr>`
+        ).join("");
 
   return `<!doctype html>
 <html lang="es">
@@ -121,7 +140,7 @@ export function renderHtml(jobs: FilteredJob[]): string {
             <tr>
               <td class="content-padding" style="padding:28px 24px 8px 24px;">
                 <div class="header-title" style="font-size:22px;font-weight:700;color:${TEXT_COLOR};">
-                  ${jobs.length} vacante${jobs.length === 1 ? "" : "s"} nueva${jobs.length === 1 ? "" : "s"} hoy
+                  ${jobs.length === 0 ? "Sin vacantes nuevas hoy" : `${jobs.length} vacante${jobs.length === 1 ? "" : "s"} nueva${jobs.length === 1 ? "" : "s"} hoy`}
                 </div>
                 <div style="margin-top:4px;font-size:14px;color:${MUTED_COLOR};text-transform:capitalize;">
                   ${escapeHtml(today)}
@@ -129,14 +148,14 @@ export function renderHtml(jobs: FilteredJob[]): string {
               </td>
             </tr>
             <tr>
-              <td class="content-padding" style="padding:16px 24px 0 24px;">
+              <td class="content-padding" style="padding:0 24px 0 24px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                  ${cards}
+                  ${body}
                 </table>
               </td>
             </tr>
             <tr>
-              <td class="content-padding" style="padding:8px 24px 24px 24px;text-align:center;">
+              <td class="content-padding" style="padding:20px 24px 24px 24px;text-align:center;">
                 <div style="font-size:12px;color:${MUTED_COLOR};">
                   JobCron · digest automático de vacantes
                 </div>
@@ -151,9 +170,15 @@ export function renderHtml(jobs: FilteredJob[]): string {
 }
 
 function renderText(jobs: FilteredJob[]): string {
-  return jobs
-    .map((job) => `${job.company} — ${job.title} (${job.location}) — ${job.url}`)
-    .join("\n");
+  if (jobs.length === 0) {
+    return "No se encontraron vacantes nuevas en esta corrida.";
+  }
+
+  const groups = groupByCompany(jobs);
+  return Array.from(groups, ([company, companyJobs]) => {
+    const lines = companyJobs.map((job) => `  - ${job.title} (${job.location}) — ${job.url}`);
+    return `${company}\n${lines.join("\n")}`;
+  }).join("\n\n");
 }
 
 function escapeHtml(value: string): string {

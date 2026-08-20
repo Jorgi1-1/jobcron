@@ -70,21 +70,17 @@ async function run(): Promise<void> {
   const matched = filterJobs(allJobs);
   const newJobs = await dedupeAndPersist(matched);
 
-  let emailSent = false;
-  if (newJobs.length > 0) {
-    await sendDigest(newJobs);
-    emailSent = true;
-  }
+  await sendDigest(newJobs);
 
   await recordDigestRun({
     jobsScanned,
     jobsNew: newJobs.length,
     sourcesFailed,
-    emailSent,
+    emailSent: true,
   });
 
   console.log(
-    `[JobCron] Escaneadas: ${jobsScanned}, matchearon filtro: ${matched.length}, nuevas: ${newJobs.length}, correo enviado: ${emailSent}, fuentes fallidas: ${sourcesFailed.join(", ") || "ninguna"}`
+    `[JobCron] Escaneadas: ${jobsScanned}, matchearon filtro: ${matched.length}, nuevas: ${newJobs.length}, correo enviado: true, fuentes fallidas: ${sourcesFailed.join(", ") || "ninguna"}`
   );
 }
 
