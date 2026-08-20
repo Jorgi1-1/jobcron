@@ -1,6 +1,6 @@
 # JobCron
 
-Bot personal que revisa a diario (9:00 am CDMX) las páginas de carreras de una lista de empresas, filtra vacantes relevantes (Desarrollo/Frontend/Full-Stack/UX, remoto o CDMX/GDL/MTY/Puebla) y envía un digest diario por correo — sin duplicados y sin costo de infraestructura. Ver [PRD](./PRD-bot-vacantes.md) si lo copias al repo.
+Bot personal que revisa a diario (9:00 am y 4:00 pm CDMX) las páginas de carreras de una lista de empresas, filtra vacantes relevantes (Desarrollo/Frontend/Full-Stack/UX, remoto o CDMX/GDL/MTY/Puebla) y envía un digest diario por correo — sin duplicados y sin costo de infraestructura. Ver [PRD](./PRD-bot-vacantes.md) si lo copias al repo.
 
 ## Setup
 
@@ -30,7 +30,7 @@ Bot personal que revisa a diario (9:00 am CDMX) las páginas de carreras de una 
 
 6. **GitHub Actions** — en el repo (público, para Actions gratis ilimitado):
    - Settings → Secrets and variables → Actions → agrega cada variable de `.env.example` como Secret.
-   - El workflow [`scraper.yml`](./.github/workflows/scraper.yml) ya corre a diario a las 9:00 am CDMX vía cron y también se puede disparar manualmente (`workflow_dispatch`).
+   - El workflow [`scraper.yml`](./.github/workflows/scraper.yml) ya corre a diario a las 9:00 am y 4:00 pm CDMX vía cron y también se puede disparar manualmente (`workflow_dispatch`).
 
 ## Agregar una empresa nueva
 

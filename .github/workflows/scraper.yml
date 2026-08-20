@@ -2,8 +2,9 @@ name: JobCron digest
 
 on:
   schedule:
-    # 09:00 hora CDMX (UTC-6, sin horario de verano) = 15:00 UTC
+    # 09:00 y 16:00 hora CDMX (UTC-6, sin horario de verano) = 15:00 y 22:00 UTC
     - cron: "0 15 * * *"
+    - cron: "0 22 * * *"
   workflow_dispatch: {}
 
 jobs:
