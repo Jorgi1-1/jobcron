@@ -22,6 +22,12 @@ export const titleKeywords: string[] = [
   "web developer",
   "software engineer, frontend",
   "ui engineer",
+  // Ampliado a puestos de desarrollador en general, no solo front/full/UI
+  "developer",
+  "desarrollador",
+  "desarrolladora",
+  "software engineer",
+  "swe",
 ];
 
 export const locationKeywords: string[] = [
